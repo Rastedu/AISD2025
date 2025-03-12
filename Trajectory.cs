@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace ProjectileMotion
-{
+namespace ProjectileMotion{
     class Projectile{
         private readonly double _initialVelocity; // Начальная скорость (м/с)
         private readonly double _angle;           // Угол (в рад)
@@ -47,45 +46,52 @@ namespace ProjectileMotion
     }
 
     class Program{
-        static void Main(string[] args)
-        {
-            string inputFilePath = "input.txt";
-            string outputFilePath = "output.txt";
+    static void Main(string[] args)
+    {
+        string inputFilePath = "input.txt";
+        string outputFilePath = "output.txt";
 
-            if (!File.Exists(inputFilePath)){
-                Console.WriteLine($"Er 404");
+        if (!File.Exists(inputFilePath))
+        {
+            Console.WriteLine($"Er 404");
+            return;
+        }
+
+        try
+        {
+            var lines = File.ReadAllLines(inputFilePath);
+            if (lines.Length < 2)
+            {
+                Console.WriteLine("Incorrect input");
                 return;
             }
 
-            try{
-                var lines = File.ReadAllLines(inputFilePath);
-                if (lines.Length < 2){
-                    Console.WriteLine("Incorrect input");
-                    return;
+            double angle = double.Parse(lines[0]);
+            double initialVelocity = double.Parse(lines[1]);
+
+            Projectile projectile = new Projectile(initialVelocity, angle);
+
+            double timeStep = 0.1;
+            double maxTime = 10;
+            var trajectory = projectile.CalculateTrajectory(timeStep, maxTime);
+
+            using (var writer = new StreamWriter(outputFilePath))
+            {
+                writer.WriteLine("X, Y");
+                foreach (var point in trajectory) // Используем явное обращение к элементам кортежа
+                {
+                    double x = point.x;
+                    double y = point.y;
+                    writer.WriteLine($"{x:F2}, {y:F2}");
                 }
-
-                double angle = double.Parse(lines[0]);
-                double initialVelocity = double.Parse(lines[1]);
-
-                Projectile projectile = new Projectile(initialVelocity, angle);
-
-                double timeStep = 0.1; 
-                double maxTime = 10;   
-                var trajectory = projectile.CalculateTrajectory(timeStep, maxTime);
-
-               
-                using (var writer = new StreamWriter(outputFilePath)){
-                    writer.WriteLine("X, Y"); 
-                    foreach (var (x, y) in trajectory){
-                        writer.WriteLine($"{x:F2}, {y:F2}");
-                    }
-                }
-
-                Console.WriteLine($"Encode success");
             }
-            catch (Exception ex){
-                Console.WriteLine($"Er: {ex.Message}");
-            }
+
+            Console.WriteLine($"Encode success");
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Er: {ex.Message}");
+        }
+    }
     }
 }
