@@ -5,14 +5,13 @@ using System.Linq;
 
 namespace ProjectileMotion{
     class Projectile{
-        private readonly double _initialVelocity; // Начальная скорость (м/с)
-        private readonly double _angle;           // Угол (в рад)
-        private readonly double G = 9.81;         
+         readonly double _initialVelocity; // Начальная скорость (м/с)
+         readonly double _angle;           // Угол (в рад)
+        double G = 9.81;         
 
-        Projectile(double initialVelocity, double angleInDegrees, double G){
+        public Projectile(double initialVelocity, double angleInDegrees, double G){
             _initialVelocity = initialVelocity;
-            _angle = DegreeToRadian(angleInDegrees);
-            G = gravity;
+            _angle = DegToRad(angleInDegrees);
         }
 
         
@@ -35,7 +34,7 @@ namespace ProjectileMotion{
         }
 
         
-        List<(double x, double y)> CalculateTrajectory(double timeStep, double maxTime){
+        public List<(double x, double y)> CalculateTrajectory(double timeStep, double maxTime){
             var trajectory = new List<(double x, double y)>();
             for (double t = 0; t <= maxTime; t += timeStep)
             {
@@ -45,11 +44,12 @@ namespace ProjectileMotion{
         }
     }
 
-    class Program{
+    class Program {
     static void Main(string[] args)
     {
         string inputFilePath = "input.txt";
         string outputFilePath = "output.txt";
+        double G = 9.81;  
 
         if (!File.Exists(inputFilePath))
         {
@@ -69,7 +69,7 @@ namespace ProjectileMotion{
             double angle = double.Parse(lines[0]);
             double initialVelocity = double.Parse(lines[1]);
 
-            Projectile projectile = new Projectile(initialVelocity, angle);
+            Projectile projectile = new Projectile(initialVelocity, angle,G);
 
             double timeStep = 0.1;
             double maxTime = 10;
@@ -78,7 +78,7 @@ namespace ProjectileMotion{
             using (var writer = new StreamWriter(outputFilePath))
             {
                 writer.WriteLine("X, Y");
-                foreach (var point in trajectory) // Используем явное обращение к элементам кортежа
+                foreach (var point in trajectory) 
                 {
                     double x = point.x;
                     double y = point.y;
