@@ -1,40 +1,53 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
-namespace ProjectileMotion{
-    class Projectile{
-         readonly double _initialVelocity; // Начальная скорость (м/с)
-         readonly double _angle;           // Угол (в рад)
-        double G = 9.81;         
+namespace ProjectileMotion
+{
+    class Projectile
+    {
+        readonly double _initialVelocity; // Начальная скорость (м/с)
+        readonly double _angle;           // Угол (в рад)
+        double G = 9.81;
 
-        public Projectile(double initialVelocity, double angleInDegrees, double G){
+        public delegate void CoordinatesCalculatedHandler(double x, double y);
+        public event CoordinatesCalculatedHandler CoordinatesCalculated;
+
+        public Projectile(double initialVelocity, double angleInDegrees, double G)
+        {
             _initialVelocity = initialVelocity;
             _angle = DegToRad(angleInDegrees);
         }
 
-        
-        static double DegToRad(double angle){
+        static double DegToRad(double angle)
+        {
             return angle * Math.PI / 180.0;
         }
 
-        
-        double dX(double time){
+        double dX(double time)
+        {
             return _initialVelocity * Math.Cos(_angle) * time;
         }
 
-       
-        double dY(double time){
+        double dY(double time)
+        {
             return _initialVelocity * Math.Sin(_angle) * time - 0.5 * G * Math.Pow(time, 2);
         }
 
-        (double x, double y) GetCoordinates(double time){
-            return (dX(time), dY(time));
+        (double x, double y) GetCoordinates(double time)
+        {
+            var coordinates = (dX(time), dY(time));
+            OnCoordinatesCalculated(coordinates.x, coordinates.y); 
+            return coordinates;
         }
 
-        
-        public List<(double x, double y)> CalculateTrajectory(double timeStep, double maxTime){
+        protected virtual void OnCoordinatesCalculated(double x, double y)
+        {
+            CoordinatesCalculated?.Invoke(x, y); 
+        }
+
+        public List<(double x, double y)> CalculateTrajectory(double timeStep, double maxTime)
+        {
             var trajectory = new List<(double x, double y)>();
             for (double t = 0; t <= maxTime; t += timeStep)
             {
@@ -44,54 +57,61 @@ namespace ProjectileMotion{
         }
     }
 
-    class Program {
-    static void Main(string[] args)
+    class Program
     {
-        string inputFilePath = "input.txt";
-        string outputFilePath = "output.txt";
-        double G = 9.81;  
-
-        if (!File.Exists(inputFilePath))
+        static void Main(string[] args)
         {
-            Console.WriteLine($"Er 404");
-            return;
-        }
+            string inputFilePath = "input.txt";
+            string outputFilePath = "output.txt";
+            double G = 9.81;
 
-        try
-        {
-            var lines = File.ReadAllLines(inputFilePath);
-            if (lines.Length < 2)
+            if (!File.Exists(inputFilePath))
             {
-                Console.WriteLine("Incorrect input");
+                Console.WriteLine($"Error 404: Input file not found.");
                 return;
             }
 
-            double angle = double.Parse(lines[0]);
-            double initialVelocity = double.Parse(lines[1]);
-
-            Projectile projectile = new Projectile(initialVelocity, angle,G);
-
-            double timeStep = 0.1;
-            double maxTime = 10;
-            var trajectory = projectile.CalculateTrajectory(timeStep, maxTime);
-
-            using (var writer = new StreamWriter(outputFilePath))
+            try
             {
-                writer.WriteLine("X, Y");
-                foreach (var point in trajectory) 
+                var lines = File.ReadAllLines(inputFilePath);
+                if (lines.Length < 2)
                 {
-                    double x = point.x;
-                    double y = point.y;
-                    writer.WriteLine($"{x:F2}, {y:F2}");
+                    Console.WriteLine("Incorrect input");
+                    return;
                 }
-            }
 
-            Console.WriteLine($"Encode success");
+                double angle = double.Parse(lines[0]);
+                double initialVelocity = double.Parse(lines[1]);
+
+                Projectile projectile = new Projectile(initialVelocity, angle, G);
+
+                projectile.CoordinatesCalculated += (x, y) =>
+                {
+                    Console.WriteLine($"Coordinates calculated: X = {x:F2}, Y = {y:F2}");
+                };
+
+                double timeStep = 0.1;
+                double maxTime = 10;
+                var trajectory = projectile.CalculateTrajectory(timeStep, maxTime);
+
+                using (var writer = new StreamWriter(outputFilePath))
+                {
+                    writer.WriteLine("X, Y");
+                    foreach (var point in trajectory)
+                    {
+                        // Используем именованные поля кортежа
+                        double x = point.x;
+                        double y = point.y;
+                        writer.WriteLine($"{x:F2}, {y:F2}");
+                    }
+                }
+
+                Console.WriteLine("Encoding success");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Er: {ex.Message}");
-        }
-    }
     }
 }
