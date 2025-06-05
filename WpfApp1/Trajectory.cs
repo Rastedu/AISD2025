@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ProjectileMotion
+namespace WpfApp1
 {
     class Projectile
     {
@@ -59,7 +59,7 @@ namespace ProjectileMotion
 
     class Program
     {
-        static void Main(string[] args)
+        static void RE(string[] args)
         {
             string inputFilePath = "input.txt";
             string outputFilePath = "output.txt";

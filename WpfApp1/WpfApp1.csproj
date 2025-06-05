@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net9.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Update="back.gif">
+        <DependentUpon>MainWindow.xaml</DependentUpon>
+      </None>
+      <None Update="launch.wav">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+      <None Update="hit.wav">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+      <None Update="background.jpg">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+      <None Update="end.mp3">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+      <None Update="target.mp3">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+    </ItemGroup>
+
+</Project>
