@@ -22,3 +22,5 @@ C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\OptionsW
 C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\OptionsWindows.g.cs
 C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\Task.baml
 C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\Task.g.cs
+C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\GameWindow.baml
+C:\Users\1691166\RiderProjects\WpfApp1\WpfApp1\obj\Debug\net9.0-windows\GameWindow.g.cs

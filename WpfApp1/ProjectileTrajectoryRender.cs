@@ -16,17 +16,16 @@ public class ProjectileTrajectoryRenderer
     private readonly Random _random = new Random();
     
     private double _time;
-    private const double Gravity = 9.8; // Ускорение свободного падения (м/с²)
+    private const double Gravity = 9.8; 
     private Point _currentPosition;
     private bool _isProjectileActive;
     
-    // Физические параметры снаряда
+   
     public double InitialVelocity { get; set; } = 50;
     public double Angle { get; set; } = 45;
-    public double ProjectileMass { get; set; } = 1.0; // Масса снаряда (кг)
+    public double ProjectileMass { get; set; } = 1.0; 
     public Point LaunchPoint { get; set; }
     
-    // Визуальные настройки
     public Brush ProjectileBrush { get; set; } = Brushes.Red;
     public double ProjectileSize { get; set; } = 8;
     public bool ShowFullTrajectory { get; set; } = true;
@@ -39,9 +38,9 @@ public class ProjectileTrajectoryRenderer
     public Brush TargetBrush { get; set; } = Brushes.Blue;
     
     // События
-    public event Action<Point> ProjectileLaunched;
-    public event Action<Point> TargetHit;
-    public event Action SimulationFinished;
+    public event Action<Point>? ProjectileLaunched;
+    public event Action<Point>? TargetHit;
+    public event Action? SimulationFinished;
 
     public ProjectileTrajectoryRenderer(Canvas canvas)
     {
@@ -49,7 +48,7 @@ public class ProjectileTrajectoryRenderer
         
         _animationTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+            Interval = TimeSpan.FromMilliseconds(16) 
         };
         _animationTimer.Tick += OnAnimationFrame;
         
@@ -83,14 +82,12 @@ public class ProjectileTrajectoryRenderer
 
     public void CreateTargets()
     {
-        // Удаляем старые мишени
         foreach (var target in _targets)
         {
             _canvas.Children.Remove(target);
         }
         _targets.Clear();
         
-        // Создаем новые мишени
         for (int i = 0; i < TargetCount; i++)
         {
             var target = new Rectangle
@@ -100,10 +97,9 @@ public class ProjectileTrajectoryRenderer
                 Fill = TargetBrush,
                 Stroke = Brushes.Black,
                 StrokeThickness = 1,
-                Tag = true // Флаг активности мишени
+                Tag = true 
             };
             
-            // Случайное позиционирование мишеней в правой половине экрана
             double x = _random.Next((int)(_canvas.ActualWidth / 2), (int)(_canvas.ActualWidth - TargetSize.Width));
             double y = _random.Next(0, (int)(_canvas.ActualHeight - TargetSize.Height));
             
@@ -125,14 +121,12 @@ public class ProjectileTrajectoryRenderer
         var canvasX = _currentPosition.X;
         var canvasY = _canvas.ActualHeight - _currentPosition.Y;
         
-        // Проверка выхода за границы
         if (canvasY > _canvas.ActualHeight || canvasX > _canvas.ActualWidth || canvasX < 0)
         {
             StopSimulation();
             return;
         }
         
-        // Создание визуальной точки траектории
         var projectilePoint = new Ellipse
         {
             Width = ProjectileSize,
@@ -148,7 +142,6 @@ public class ProjectileTrajectoryRenderer
         _canvas.Children.Add(projectilePoint);
         _projectilePoints.Add(projectilePoint);
         
-        // Отрисовка линии траектории
         if (ShowFullTrajectory && _projectilePoints.Count > 1)
         {
             var line = new Line
@@ -163,7 +156,6 @@ public class ProjectileTrajectoryRenderer
             _canvas.Children.Add(line);
         }
         
-        // Проверка столкновений с мишенями
         CheckCollisions(canvasX, canvasY);
     }
 
@@ -177,7 +169,7 @@ public class ProjectileTrajectoryRenderer
         
         foreach (var target in _targets)
         {
-            if (target.Tag as bool? != true) continue; // Пропускаем неактивные мишени
+            if (target.Tag as bool? != true) continue; 
             
             var targetRect = new Rect(
                 Canvas.GetLeft(target),
@@ -187,12 +179,10 @@ public class ProjectileTrajectoryRenderer
             
             if (projectileRect.IntersectsWith(targetRect))
             {
-                // Попадание в мишень
                 target.Tag = false;
                 TargetHit?.Invoke(new Point(Canvas.GetLeft(target) + target.Width / 2, 
                                          Canvas.GetTop(target) + target.Height / 2));
                 
-                // Анимация исчезновения мишени
                 var fadeAnimation = new DoubleAnimation
                 {
                     To = 0,
@@ -203,7 +193,6 @@ public class ProjectileTrajectoryRenderer
                 fadeAnimation.Completed += (s, _) => _canvas.Children.Remove(target);
                 target.BeginAnimation(UIElement.OpacityProperty, fadeAnimation);
                 
-                // Можно добавить эффект взрыва или частиц здесь
             }
         }
     }
@@ -211,16 +200,11 @@ public class ProjectileTrajectoryRenderer
     private Point CalculateProjectilePosition(double time)
     {
         double angleRad = Angle * Math.PI / 180;
-        
-        // Учет массы снаряда (чем больше масса, тем меньше влияние сопротивления воздуха)
-        // Простая модель сопротивления воздуха, пропорциональная массе
         double airResistanceCoefficient = 0.01 / ProjectileMass;
         
-        // Компоненты скорости с учетом сопротивления воздуха
         double vx = InitialVelocity * Math.Cos(angleRad) * Math.Exp(-airResistanceCoefficient * time);
         double vy = InitialVelocity * Math.Sin(angleRad) * Math.Exp(-airResistanceCoefficient * time) - Gravity * time;
         
-        // Позиция с учетом сопротивления воздуха (интегрирование скорости)
         double x = LaunchPoint.X + InitialVelocity * Math.Cos(angleRad) * 
                   (1 - Math.Exp(-airResistanceCoefficient * time)) / airResistanceCoefficient;
         

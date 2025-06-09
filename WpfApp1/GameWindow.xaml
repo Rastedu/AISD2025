@@ -1,0 +1,18 @@
+﻿<Window x:Class="WpfApp1.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Projectile Game" 
+        WindowState="Maximized"
+        WindowStyle="None">
+    <Grid>
+        <Canvas x:Name="GameCanvas" Background="Black"/>
+        
+        <Button x:Name="BackButton" 
+                Content="Back to Menu" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top"
+                Margin="10"
+                Width="120"
+                Click="BackButton_Click"/>
+    </Grid>
+</Window>

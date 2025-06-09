@@ -51,7 +51,7 @@
     </Window.Resources>
     
     <Grid x:Name="MainGrid">
-        
+      
         <Grid>
         <Image Source="back.gif" Stretch="UniformToFill" Opacity="0.3"/>
 
@@ -81,14 +81,14 @@
                     Click="ExitButton_Click"
                     Margin="0,40,0,0"/>
         </StackPanel>
-        <Canvas x:Name="MainCanvas">
+        
         
         <TextBlock Text="Alpha" 
                    Foreground="#FF606060" 
                    HorizontalAlignment="Right" 
                    VerticalAlignment="Bottom"
                    Margin="20"
-                   FontSize="14"/></Canvas>
+                   FontSize="14"/>
     </Grid>
     </Grid>
 </Window>

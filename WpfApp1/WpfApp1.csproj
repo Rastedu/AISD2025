@@ -27,6 +27,12 @@
       <None Update="target.mp3">
         <DependentUpon>Task.xaml</DependentUpon>
       </None>
+      <None Update="bottom_border.png">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
+      <None Update="top_border.png">
+        <DependentUpon>Task.xaml</DependentUpon>
+      </None>
     </ItemGroup>
 
 </Project>

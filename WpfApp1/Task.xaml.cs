@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Media;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,12 +21,10 @@ public partial class Task : Window
     private readonly DispatcherTimer _animationTimer;
     private readonly Random _random = new Random();
     
-    // Границы с текстурами
     private Image _topBorder;
     private Image _bottomBorder;
     private Image _background;
     
-    // Звуки
     private SoundPlayer _launchSound;
     private SoundPlayer _hitSound;
     private SoundPlayer _targetsound;
@@ -35,13 +34,11 @@ public partial class Task : Window
     private Point _currentPosition;
     private bool _isProjectileActive;
     
-    // Физические параметры
     public double InitialVelocity { get; set; } = 50;
     public double Angle { get; set; } = 45;
     public double ProjectileMass { get; set; } = 1.0;
     public Point LaunchPoint { get; set; }
     
-    // Визуальные настройки
     public Brush ProjectileBrush { get; set; } = Brushes.Red;
     public double ProjectileSize { get; set; } = 8;
     public bool ShowFullTrajectory { get; set; } = true;
@@ -77,8 +74,17 @@ public partial class Task : Window
     
      public Task(Canvas canvas)
      {
-         _canvas = canvas ?? throw new ArgumentNullException(nameof(canvas));
-         _animationTimer = new DispatcherTimer
+         if (canvas == null) 
+             throw new ArgumentNullException(nameof(canvas));
+
+         canvas.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+         canvas.Arrange(new Rect(0, 0, canvas.DesiredSize.Width, canvas.DesiredSize.Height));
+
+         if (canvas.ActualWidth <= 0 || canvas.ActualHeight <= 0)
+         {
+             canvas.Width = SystemParameters.PrimaryScreenWidth;
+             canvas.Height = SystemParameters.PrimaryScreenHeight;
+         }         _animationTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(16)
         };
@@ -247,7 +253,16 @@ public partial class Task : Window
         ClearTrajectory();
         _time = 0;
         _isProjectileActive = true;
-        
+        try 
+        {
+            _launchSound = new SoundPlayer("launch.wav");
+            _launchSound.Load();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Sound load error: {ex.Message}");
+            _launchSound = null;
+        }
         
         _launchSound?.Play();
         
@@ -274,14 +289,23 @@ public partial class Task : Window
 
     public void CreateTargets()
     {
-        
+        if (_canvas == null || _canvas.ActualWidth <= 0 || _canvas.ActualHeight <= 0)
+        {
+            throw new InvalidOperationException("Canvas is not properly initialized");
+        }
+
         foreach (var target in _targets)
         {
             _canvas.Children.Remove(target);
         }
         _targets.Clear();
-        
+
+        double minX = _canvas.ActualWidth / 2;
+        double maxX = Math.Max(minX + 1, _canvas.ActualWidth - TargetSize.Width);
+        double maxY = Math.Max(1, _canvas.ActualHeight - TargetSize.Height);
+
         _activeTargetsCount = TargetCount;
+    
         for (int i = 0; i < TargetCount; i++)
         {
             var target = new Rectangle
@@ -293,19 +317,17 @@ public partial class Task : Window
                 StrokeThickness = 1,
                 Tag = true 
             };
-            
-            
-            double x = _random.Next((int)(_canvas.ActualWidth / 2), (int)(_canvas.ActualWidth - TargetSize.Width));
-            double y = _random.Next(0, (int)(_canvas.ActualHeight - TargetSize.Height));
-            
+
+            double x = _random.Next((int)minX, (int)maxX);
+            double y = _random.Next(0, (int)maxY);
+        
             Canvas.SetLeft(target, x);
             Canvas.SetTop(target, y);
-            
+        
             _canvas.Children.Add(target);
             _targets.Add(target);
         }
     }
-
     private void OnAnimationFrame(object sender, EventArgs e)
     {
         if (!_isProjectileActive) return;
@@ -378,12 +400,10 @@ public partial class Task : Window
             
             if (projectileRect.IntersectsWith(targetRect))
             {
-                // Попадание в мишень
                 target.Tag = false;
                 TargetHit?.Invoke(new Point(Canvas.GetLeft(target) + target.Width / 2, 
                                          Canvas.GetTop(target) + target.Height / 2));
                 
-                // Анимация исчезновения мишени
                 var fadeAnimation = new DoubleAnimation
                 {
                     To = 0,
@@ -394,7 +414,6 @@ public partial class Task : Window
                 fadeAnimation.Completed += (s, _) => _canvas.Children.Remove(target);
                 target.BeginAnimation(UIElement.OpacityProperty, fadeAnimation);
                 
-                // Можно добавить эффект взрыва или частиц здесь
             }
         }
     }
@@ -403,15 +422,11 @@ public partial class Task : Window
     {
         double angleRad = Angle * Math.PI / 180;
         
-        // Учет массы снаряда (чем больше масса, тем меньше влияние сопротивления воздуха)
-        // Простая модель сопротивления воздуха, пропорциональная массе
         double airResistanceCoefficient = 0.01 / ProjectileMass;
         
-        // Компоненты скорости с учетом сопротивления воздуха
         double vx = InitialVelocity * Math.Cos(angleRad) * Math.Exp(-airResistanceCoefficient * time);
         double vy = InitialVelocity * Math.Sin(angleRad) * Math.Exp(-airResistanceCoefficient * time) - Gravity * time;
         
-        // Позиция с учетом сопротивления воздуха (интегрирование скорости)
         double x = LaunchPoint.X + InitialVelocity * Math.Cos(angleRad) * 
                   (1 - Math.Exp(-airResistanceCoefficient * time)) / airResistanceCoefficient;
         
@@ -445,7 +460,6 @@ public partial class Task : Window
         Canvas.SetTop(explosion, hitPosition.Y - 30);
         MainCanvas.Children.Add(explosion);
         
-        // Анимация взрыва
         var anim = new DoubleAnimation
         {
             To = 0,
@@ -459,7 +473,6 @@ public partial class Task : Window
     
     private void OnSimulationFinished()
     {
-        // Можно добавить логику по завершению симуляции
     }
     
     private void VelocitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -480,13 +493,10 @@ public partial class Task : Window
     
     private void ShowWinMessage()
     {
-        // Останавливаем симуляцию
         StopSimulation();
         
-        // Воспроизводим звук победы
         _winSound?.Play();
         
-        // Создаем сообщение о победе
         var winText = new TextBlock
         {
             Text = WinMessage,
@@ -498,7 +508,6 @@ public partial class Task : Window
             
         };
         
-        // Создаем полупрозрачный фон для сообщения
         var winBackground = new Border
         {
             Background = new SolidColorBrush(Color.FromArgb(200, 0, 0, 0)),
@@ -508,7 +517,6 @@ public partial class Task : Window
             Child = winText
         };
         
-        // Создаем контейнер для центрирования
         var winContainer = new Grid
         {
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -516,12 +524,10 @@ public partial class Task : Window
         };
         winContainer.Children.Add(winBackground);
         
-        // Добавляем на Canvas
         _canvas.Children.Add(winContainer);
         Canvas.SetLeft(winContainer, (_canvas.ActualWidth - winBackground.Width) / 2);
         Canvas.SetTop(winContainer, (_canvas.ActualHeight - winBackground.Height) / 2);
         
-        // Анимация появления
         var anim = new DoubleAnimation
         {
             From = 0,
@@ -532,7 +538,6 @@ public partial class Task : Window
         
         winContainer.BeginAnimation(UIElement.OpacityProperty, anim);
         
-        // Через 5 секунд убираем сообщение
         var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
         timer.Tick += (s, e) => 
         {
